@@ -23,12 +23,11 @@ class EditGeneratorFrame():
     # expandedFrame - frame that is currently expanded and can be accessed to collapse it in case other one need to be expanded
     
     def __init__(self, parent):
-        style = ttk.Style()
-        style.configure('EditGenFrame.TFrame', foreground='black', background='green') #padding does not work with frames 
+        self.createStyles()
         
         self.parent = parent
         self.frame = ttk.Frame(parent.frame, style='EditGenFrame.TFrame')
-        self.frame.pack(expand=1, fill=BOTH)
+        self.frame.pack(fill=BOTH, expand=1)
         
         self.expandedFrame = None
         
@@ -48,47 +47,94 @@ class EditGeneratorFrame():
         for child in widget.winfo_children(): #TODO: tkinter error here in some cases; need to investigate 
             child.destroy()    
     
-    def createHeader(self):
+    def addYScrollToFrame(self, parentFrame):
+        canvas = Canvas(parentFrame)
+        scrollbar = Scrollbar(parentFrame, orient='vertical', command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        scrollbar.pack(side=RIGHT, fill=Y)
+        canvas.pack(side=LEFT)
+        
+        targetFrame = ttk.Frame(canvas)
+        canvas.create_window((0,0), window=targetFrame, anchor='nw')        
+        targetFrame.bind('<Configure>', lambda event, canvasCmp = canvas: canvasCmp.configure(scrollregion = canvasCmp.bbox('all'), width=165, height=650))
+        
+        return targetFrame
+    
+    def createStyles(self):
+        style = ttk.Style()
+        style.configure('EditGenFrame.TFrame', background='green') #padding does not work with frames
+        
         style = ttk.Style()
         style.configure('EditGenHeader.TFrame', background='red')
         
+        style = ttk.Style()
+        style.configure('EditGenCenter.TFrame', background='gray')
+        
+        style = ttk.Style()
+        style.configure('EditGenFooter.TFrame', background='blue')
+        
+        style = ttk.Style()
+        style.configure('AddRemoveBlock.TButton', width = 3)
+        
+        style = ttk.Style()
+        style.configure('Block.TButton', width = 20, justify = LEFT)
+    
+    def createHeader(self):
         self.header = ttk.Frame(self.frame, padding='0 5 0 5', style='EditGenHeader.TFrame')
-        self.header.grid(column = 0, row = 0, sticky=(E, W))
+        self.header.pack(fill=X)
         
         ttk.Button(self.header, text=config.GUI['MAIN']['HOME'], command = self.onHome).grid(column = 0, row = 0)
-        ttk.Label(self.header, text=self.currentGenerator.name).grid(column = 1, row = 0)
+        ttk.Label(self.header, text=config.GUI['MAIN']['SEP']).grid(column = 1, row = 0)
+        ttk.Label(self.header, text=self.currentGenerator.name).grid(column = 2, row = 0)
         
     def createCenter(self):
-        self.center = ttk.Frame(self.frame)
-        self.center.grid(column = 0, row = 1, sticky=(N, S, E, W))
+        self.center = ttk.Frame(self.frame, style='EditGenCenter.TFrame')
+        self.center.pack(fill=BOTH, expand=1)
         
-        blocksFrame = ttk.Frame(self.center)
-        blocksFrame.grid(column = 0, row = 0, sticky=(N, S, W))
-        
-        self.createBlocksPanel(blocksFrame)
+        self.createSidePanel()
         self.createParagraphsPanel(self.center)
         
     def createFooter(self):
-        self.footer = ttk.Frame(self.frame)
-        self.footer.grid(column = 0, row = 2, sticky=(E, W))
+        self.footer = ttk.Frame(self.frame, style='EditGenFooter.TFrame')
+        self.footer.pack(fill=X, side=BOTTOM)
+
+    def createSidePanel(self):
+        sidePanel = ttk.Frame(self.center, width = 165, style = 'EditGenFooter.TFrame')
+        sidePanel.pack(side = LEFT, fill = Y)
+        
+        row = 0
+        ttk.Label(sidePanel, text=config.GUI['BLOCKS']['TITLE'], font = "Helvetica 14", justify = LEFT).grid(column = 0, row = row, sticky = (E, W))
+        row = row + 1
+        #ttk.Separator(sidePanel, orient = HORIZONTAL).grid(column = 0, row = row, sticky = (E, W))
+        #row = row + 1
+        
+        addBlockNameEntry = StringVar()
+        ttk.Entry(sidePanel, width = 5, textvariable=addBlockNameEntry).grid(column = 0, row = row, sticky = (E, W))
+        ttk.Button(sidePanel, text = config.GUI['MAIN']['ADD'], style = 'AddRemoveBlock.TButton', command = lambda addBlockNameEntry = addBlockNameEntry: self.onAddBlock(addBlockNameEntry)).grid(column = 1, row = row)
+        row = row + 1
+        
+        ttk.Separator(sidePanel, orient = HORIZONTAL).grid(column = 0, row = row, sticky = (E, W))
+        row = row + 1
+        
+        blocksScrollingFrame = ttk.Frame(sidePanel)
+        blocksScrollingFrame.grid(column = 0, row = row)
+        row = row + 1
+        
+        blocksFrame = self.addYScrollToFrame(blocksScrollingFrame)
+        self.createBlocksPanel(blocksFrame)
 
     def createBlocksPanel(self, parent):
         row = 0
-        addBlockNameEntry = StringVar()
-        ttk.Entry(parent, width=10, textvariable=addBlockNameEntry).grid(column = 0, row = row)
-        
-        ttk.Button(parent, text=config.GUI['MAIN']['ADD'], command = lambda addBlockNameEntry = addBlockNameEntry: self.onAddBlock(addBlockNameEntry)).grid(column = 1, row = row)
-        row = row + 1
-         
         index = row
         for block in self.currentGenerator.blocks:
-            ttk.Button(parent, text=block.blockName, command = lambda block = block : self.loadBlock(block)).grid(column = 0, row = index)
-            ttk.Button(parent, text=config.GUI['MAIN']['REMOVE'], command = lambda blockId = block.blockId : self.onDeleteBlock(blockId)).grid(column = 1, row = index)
+            ttk.Button(parent, text=block.blockName, style = 'Block.TButton', command = lambda block = block : self.loadBlock(block)).grid(column = 0, row = index)
+            ttk.Button(parent, text=config.GUI['MAIN']['REMOVE'], style = 'AddRemoveBlock.TButton', command = lambda blockId = block.blockId : self.onDeleteBlock(blockId)).grid(column = 1, row = index)
             index = index + 1
             
     def createParagraphsPanel(self, parent):
-        self.paragraphsPanel = ttk.Frame(self.center)   
-        self.paragraphsPanel.grid(column = 1, row = 0, sticky=(N, S, E))
+        self.paragraphsPanel = ttk.Frame(parent)   
+        self.paragraphsPanel.pack(side = LEFT, fill = BOTH)
         
     def loadBlock(self, block):
         self.paragraphsPanel.destroy()
@@ -138,8 +184,6 @@ class EditGeneratorFrame():
             ttk.Button(parent, text=config.GUI['MAIN']['REMOVE'], command = lambda rowId = row[0]: self.onDeleteParagraph(rowId)).grid(column = 1, row = index)
             index = index + 1
         return index
-    
-    
         
     def onAddBlock(self, blockNameValue):
         try:
