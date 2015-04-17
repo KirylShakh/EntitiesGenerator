@@ -17,7 +17,7 @@ class ChooseGeneratorFrame():
 
     def __init__(self, parent):
         self.parent = parent
-        self.frame = ttk.Frame(parent.frame, padding="3 3 12 12")
+        self.frame = ttk.Frame(parent.frame, padding = "3 3 12 12")
         self.frame.pack()
         
     def render(self):
@@ -32,24 +32,24 @@ class ChooseGeneratorFrame():
         
     def createHeader(self):
         self.header = ttk.Frame(self.frame);
-        self.header.grid(column = 0, row = 0, sticky=(E, W))
+        self.header.grid(column = 0, row = 0, sticky = (E, W))
         
         ttk.Label(self.header, text=config.GUI['MAIN']['HOME']).grid(column = 0, row = 0)
         
     def createCenter(self):
         self.center = ttk.Frame(self.frame)
-        self.center.grid(column = 0, row = 1, sticky=(N, S, E, W))
+        self.center.grid(column = 0, row = 1, sticky = (N, S, E, W))
         
         self.createNewGeneratorPanel(self.center)
         self.createGeneratorListPanel(self.center)  
         
     def createFooter(self):
         self.footer = ttk.Frame(self.frame)
-        self.footer.grid(column = 0, row = 2, sticky=(E, W))
+        self.footer.grid(column = 0, row = 2, sticky = (E, W))
     
     def createNewGeneratorPanel(self, parent):
         addGeneratorNameEntry = StringVar()
-        ttk.Entry(parent, width=10, textvariable=addGeneratorNameEntry).grid(column = 0, row = 1)
+        ttk.Entry(parent, width = 10, textvariable=addGeneratorNameEntry).grid(column = 0, row = 1)
         
         ttk.Button(parent, text=config.GUI['MAIN']['ADD'], command = lambda addGeneratorNameEntry = addGeneratorNameEntry: self.createGenerator(addGeneratorNameEntry)).grid(column = 1, row = 1)
         

@@ -21,11 +21,11 @@ class MainFrame():
 
     def __init__(self, parent):
         style = ttk.Style()
-        style.configure('MainFrame.TFrame', foreground='black', background='white')
+        style.configure('MainFrame.TFrame', foreground = 'black', background = 'white')
         
         self.parent = parent
-        self.frame = ttk.Frame(parent, padding="3 3 12 12", style='MainFrame.TFrame')
-        self.frame.pack(expand=1, fill=BOTH)
+        self.frame = ttk.Frame(parent, padding = "3 3 12 12", style = 'MainFrame.TFrame')
+        self.frame.pack(expand = 1, fill = BOTH)
         
         self.renderChooseGeneratorsFrame()
         
