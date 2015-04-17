@@ -47,7 +47,7 @@ class EditGeneratorFrame():
         for child in widget.winfo_children(): #TODO: tkinter error here in some cases; need to investigate 
             child.destroy()    
     
-    def addYScrollToFrame(self, parentFrame):
+    def addYScrollToFrame(self, parentFrame, width, height):
         canvas = Canvas(parentFrame)
         scrollbar = Scrollbar(parentFrame, orient='vertical', command=canvas.yview)
         canvas.configure(yscrollcommand=scrollbar.set)
@@ -57,7 +57,7 @@ class EditGeneratorFrame():
         
         targetFrame = ttk.Frame(canvas)
         canvas.create_window((0,0), window=targetFrame, anchor='nw')        
-        targetFrame.bind('<Configure>', lambda event, canvasCmp = canvas: canvasCmp.configure(scrollregion = canvasCmp.bbox('all'), width=165, height=650))
+        targetFrame.bind('<Configure>', lambda event, canvasCmp = canvas: canvasCmp.configure(scrollregion = canvasCmp.bbox('all'), width=width, height=height))
         
         return targetFrame
     
@@ -100,28 +100,27 @@ class EditGeneratorFrame():
         self.footer.pack(fill=X, side=BOTTOM)
 
     def createSidePanel(self):
-        sidePanel = ttk.Frame(self.center, width = 165, style = 'EditGenFooter.TFrame')
+        frameWidth = 165 #width of scrolling frame and therefore side panel and its other inner frame
+        frameHeight = 650 # height of scrolling frame
+        
+        sidePanel = ttk.Frame(self.center, width = frameWidth)
         sidePanel.pack(side = LEFT, fill = Y)
         
-        row = 0
-        ttk.Label(sidePanel, text=config.GUI['BLOCKS']['TITLE'], font = "Helvetica 14", justify = LEFT).grid(column = 0, row = row, sticky = (E, W))
-        row = row + 1
-        #ttk.Separator(sidePanel, orient = HORIZONTAL).grid(column = 0, row = row, sticky = (E, W))
-        #row = row + 1
+        ttk.Label(sidePanel, text = config.GUI['BLOCKS']['TITLE'], font = "Helvetica 14", anchor = W).pack(fill = X)
+        
+        addBlockFrame = ttk.Frame(sidePanel, width = frameWidth, padding = '0 0 0 3')
+        addBlockFrame.pack()
         
         addBlockNameEntry = StringVar()
-        ttk.Entry(sidePanel, width = 5, textvariable=addBlockNameEntry).grid(column = 0, row = row, sticky = (E, W))
-        ttk.Button(sidePanel, text = config.GUI['MAIN']['ADD'], style = 'AddRemoveBlock.TButton', command = lambda addBlockNameEntry = addBlockNameEntry: self.onAddBlock(addBlockNameEntry)).grid(column = 1, row = row)
-        row = row + 1
+        ttk.Entry(addBlockFrame, width = 25, textvariable=addBlockNameEntry).pack(side = LEFT)
+        ttk.Button(addBlockFrame, text = config.GUI['MAIN']['ADD'], style = 'AddRemoveBlock.TButton', command = lambda addBlockNameEntry = addBlockNameEntry: self.onAddBlock(addBlockNameEntry)).pack(side = LEFT)
         
-        ttk.Separator(sidePanel, orient = HORIZONTAL).grid(column = 0, row = row, sticky = (E, W))
-        row = row + 1
+        ttk.Separator(sidePanel, orient = HORIZONTAL).pack(fill = X)
         
-        blocksScrollingFrame = ttk.Frame(sidePanel)
-        blocksScrollingFrame.grid(column = 0, row = row)
-        row = row + 1
+        blocksScrollingFrame = ttk.Frame(sidePanel, padding = '0 3 0 0')
+        blocksScrollingFrame.pack()
         
-        blocksFrame = self.addYScrollToFrame(blocksScrollingFrame)
+        blocksFrame = self.addYScrollToFrame(blocksScrollingFrame, frameWidth, frameHeight)
         self.createBlocksPanel(blocksFrame)
 
     def createBlocksPanel(self, parent):
@@ -131,6 +130,10 @@ class EditGeneratorFrame():
             ttk.Button(parent, text=block.blockName, style = 'Block.TButton', command = lambda block = block : self.loadBlock(block)).grid(column = 0, row = index)
             ttk.Button(parent, text=config.GUI['MAIN']['REMOVE'], style = 'AddRemoveBlock.TButton', command = lambda blockId = block.blockId : self.onDeleteBlock(blockId)).grid(column = 1, row = index)
             index = index + 1
+        
+        if index == 0:
+            ttk.Label(parent, text = config.GUI['BLOCKS']['EMPTY']).pack(fill = X)
+         
             
     def createParagraphsPanel(self, parent):
         self.paragraphsPanel = ttk.Frame(parent)   
