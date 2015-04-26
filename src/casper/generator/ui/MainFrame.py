@@ -13,6 +13,7 @@ from casper.generator.data.Generator import Generator
 
 from casper.generator.ui.ChooseGeneratorFrame import ChooseGeneratorFrame
 from casper.generator.ui.EditGeneratorFrame import EditGeneratorFrame 
+from casper.generator.ui.GenerateFrame import GenerateFrame
 
 class MainFrame():
     '''
@@ -21,7 +22,7 @@ class MainFrame():
 
     def __init__(self, parent):
         style = ttk.Style()
-        style.configure('MainFrame.TFrame', foreground = 'black', background = 'white')
+        style.configure('MainFrame.TFrame')
         
         self.parent = parent
         self.frame = ttk.Frame(parent, padding = "3 3 12 12", style = 'MainFrame.TFrame')
@@ -37,6 +38,11 @@ class MainFrame():
     def renderEditGeneratorFrame(self, generator):
         self.clearContent()
         self.activeFrame = EditGeneratorFrame(self)
+        self.activeFrame.render(generator)
+        
+    def renderGenerateFrame(self, generator):
+        self.clearContent()
+        self.activeFrame = GenerateFrame(self)
         self.activeFrame.render(generator)
 
     def clearContent(self):
@@ -59,3 +65,8 @@ class MainFrame():
         generator.remove()
         generator = None
         self.renderChooseGeneratorsFrame()
+        
+    def generate(self, name):
+        generator = Generator(name)
+        generator.open()
+        self.renderGenerateFrame(generator)

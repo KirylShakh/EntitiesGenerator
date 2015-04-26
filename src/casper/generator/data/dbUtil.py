@@ -40,10 +40,14 @@ class Instance():
         return self.cursor.lastrowid
 
 def openDB(dbName):
-    return Instance(config.DATA_PATH + dbName + '.db')
+    return Instance(config.DATA_PATH + dbName + '.gen' + '\\' + dbName + '.db')
     
 def createDB(dbName):
-    return Instance(config.DATA_PATH + dbName + '.db')
+    dbDir = config.DATA_PATH + dbName + '.gen'
+    os.makedirs(dbDir)
+    imgDir = dbDir + '\\' + 'images'
+    os.makedirs(imgDir)
+    return Instance(dbDir + '\\' + dbName + '.db')
     
 class Table():
 
@@ -77,6 +81,10 @@ class Table():
         record = Record(self.instance, self.name)
         record.insert(fields)
         return record
+    
+    def update(self, rowId, fields):
+        record = Record(self.instance, self.name, rowId)
+        record.update(fields)
     
     def delete(self):
         self.instance.execute('drop table {0}'.format(quote(self.name)))

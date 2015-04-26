@@ -16,8 +16,16 @@ class Block(Table):
         self.description = row[2]
         super().__init__(instance, self.blockName + str(self.blockId), [self.blockL['DESCRIPTION'] + ' text', self.blockL['HTML'] + ' text', self.blockL['IMAGE'] + ' text'])
         
-    def addParagraph(self, description, html = '', image = ''):
+    def addParagraph(self, description, image = '', html = ''):
         self.insert([description, html, image])
+        
+    def editParagraph(self, rowId, description, image = None, html = None):
+        fields = [(self.blockL['DESCRIPTION'], description)]
+        if html is not None:
+            fields.append((self.blockL['HTML'], html))
+        if image is not None:
+            fields.append((self.blockL['IMAGE'], image))
+        self.update(rowId, fields)
         
     def deleteParagraph(self, paragraphId):
         self.deleteRow(paragraphId)

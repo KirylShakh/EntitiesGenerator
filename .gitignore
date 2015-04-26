@@ -1,3 +1,5 @@
 .project
 .pydevproject
-res/data/*.db
+res/data/
+res/images
+install

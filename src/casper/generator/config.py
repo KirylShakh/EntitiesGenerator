@@ -23,7 +23,7 @@ class Config():
         
     def initData(self):
         self.db = ConfigParser()
-        self.db.read(self.filePath(self.data, 'db.ini'))
+        self.db.read(self.filePath(self.strings, 'db.ini'))
     
     def dirPath(self, dirName):
         return os.path.abspath(self.path + dirName) + '\\'
@@ -38,7 +38,9 @@ def init(path = None):
     global DATA_PATH
     
     if not path:
-        path = os.getcwd() + '\\..\\..\\..\\res\\'
+        #path = os.getcwd() + '\\..\\..\\..\\res\\'
+        path = os.getcwd() + '\\..\\res\\'
+    print(path)
     
     config = Config(path)
     GUI = config.gui

@@ -3,9 +3,9 @@ Created on Nov 19, 2014
 
 @author: Malk
 '''
-from os import walk
+import os
 
-from tkinter import ttk
+from tkinter import ttk, messagebox
 
 from tkinter import *
 from tkinter.ttk import *
@@ -16,9 +16,11 @@ from casper.generator.data.Generator import Generator
 class ChooseGeneratorFrame():
 
     def __init__(self, parent):
+        self.createStyles()
+        
         self.parent = parent
         self.frame = ttk.Frame(parent.frame, padding = "3 3 12 12")
-        self.frame.pack()
+        self.frame.pack(fill = BOTH, expand = 1)
         
     def render(self):
         self.clearContent()
@@ -28,30 +30,38 @@ class ChooseGeneratorFrame():
     
     def clearContent(self):
         for child in self.frame.winfo_children():
-            child.destroy()                
-        
+            child.destroy()
+            
+    def createStyles(self):
+        style = ttk.Style()
+        style.configure('AddRemoveGenerator.TButton', width = 3)
+    
     def createHeader(self):
         self.header = ttk.Frame(self.frame);
-        self.header.grid(column = 0, row = 0, sticky = (E, W))
+        self.header.pack(fill = X)
         
-        ttk.Label(self.header, text=config.GUI['MAIN']['HOME']).grid(column = 0, row = 0)
+        ttk.Label(self.header, text = config.GUI['MAIN']['HOME']).grid(column = 0, row = 0)
         
     def createCenter(self):
-        self.center = ttk.Frame(self.frame)
-        self.center.grid(column = 0, row = 1, sticky = (N, S, E, W))
+        self.center = ttk.Frame(self.frame, padding = '0 0 0 3')
+        self.center.pack(fill = BOTH, expand = 1)
         
+        ttk.Separator(self.center, orient = HORIZONTAL).pack(fill = X)
+        ttk.Label(self.center, text = config.GUI['GENERATORS']['TITLE'], font = "Helvetica 14", anchor = W).pack(fill = X)
         self.createNewGeneratorPanel(self.center)
         self.createGeneratorListPanel(self.center)  
         
     def createFooter(self):
         self.footer = ttk.Frame(self.frame)
-        self.footer.grid(column = 0, row = 2, sticky = (E, W))
+        self.footer.pack(fill = X)
     
     def createNewGeneratorPanel(self, parent):
-        addGeneratorNameEntry = StringVar()
-        ttk.Entry(parent, width = 10, textvariable=addGeneratorNameEntry).grid(column = 0, row = 1)
+        frame = ttk.Frame(parent)
+        frame.pack(fill = X)
         
-        ttk.Button(parent, text=config.GUI['MAIN']['ADD'], command = lambda addGeneratorNameEntry = addGeneratorNameEntry: self.createGenerator(addGeneratorNameEntry)).grid(column = 1, row = 1)
+        addGeneratorNameEntry = StringVar()
+        ttk.Entry(frame, textvariable = addGeneratorNameEntry).pack(side = LEFT, fill = X, expand = 1)
+        ttk.Button(frame, text = config.GUI['MAIN']['ADD'], style = 'AddRemoveGenerator.TButton', command = lambda addGeneratorNameEntry = addGeneratorNameEntry: self.createGenerator(addGeneratorNameEntry)).pack(side = LEFT)
         
     def createGenerator(self, generatorNameValue):
         try:
@@ -62,23 +72,31 @@ class ChooseGeneratorFrame():
         self.parent.createGenerator(name)
         
     def createGeneratorListPanel(self, parent):
-        files = []
-        for (_, _, filenames) in walk(config.DATA_PATH):
-            files.extend(filenames)
+        names = []
+        for (_, dirnames, _) in os.walk(config.DATA_PATH):
+            names.extend(dirnames)
             break
         
-        extension = ".db"
-        files = [filename for filename in files if filename.endswith(extension)]
-        files = [filename[:-len(extension)] for filename in files]
+        extension = ".gen"
+        names = [name for name in names if name.endswith(extension)]
+        names = [name[:-len(extension)] for name in names]
         
-        index = 2
-        for filename in files:
-            ttk.Button(parent, text=filename, command = lambda generator = filename : self.loadGenerator(generator)).grid(column = 0, row = index)
-            ttk.Button(parent, text="-", command = lambda generator = filename : self.onDeleteGenerator(generator)).grid(column = 1, row = index)
-            index = index + 1
+        listFrame = ttk.Frame(parent)
+        listFrame.pack(fill = BOTH)
+        for name in names:
+            frame = ttk.Frame(listFrame)
+            frame.pack(fill = X)
+            ttk.Button(frame, text = name, command = lambda generator = name : self.loadGenerator(generator)).pack(fill = X, side = LEFT, expand = 1)
+            ttk.Button(frame, text = config.GUI['MAIN']['REMOVE'], style = 'AddRemoveGenerator.TButton', command = lambda generator = name : self.onDeleteGenerator(generator)).pack(side = LEFT)
+            ttk.Button(frame, text = config.GUI['GENERATORS']['GENERATE'], command = lambda generator = name : self.onGenerate(generator)).pack(side = LEFT)
             
     def loadGenerator(self, name):
         self.parent.readGenerator(name)
     
     def onDeleteGenerator(self, name):
-        self.parent.deleteGenerator(name)
+        result = messagebox.askquestion(config.GUI['MAIN']['DELETE'], config.GUI['MAIN']['SURE'])
+        if result == 'yes':
+            self.parent.deleteGenerator(name)
+    
+    def onGenerate(self, name):
+        self.parent.generate(name)

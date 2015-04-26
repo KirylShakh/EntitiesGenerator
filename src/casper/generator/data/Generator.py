@@ -82,3 +82,6 @@ class Generator():
                 return block
         
         return None
+    
+    def getImagesPath(self):
+        return config.DATA_PATH + self.dbName + '.gen\\images\\' 
