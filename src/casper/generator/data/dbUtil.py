@@ -7,6 +7,7 @@ Created on Nov 19, 2014
 import sqlite3
 import os
 import codecs
+import shutil
 
 from casper.generator import config
 
@@ -34,7 +35,7 @@ class Instance():
         
     def remove(self):
         self.close()
-        os.remove(self.dbName)
+        shutil.rmtree(self.dbName[:self.dbName.rfind('\\') + 1])
         
     def lastInsertedRowId(self):
         return self.cursor.lastrowid
