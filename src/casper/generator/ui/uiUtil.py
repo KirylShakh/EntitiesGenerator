@@ -31,7 +31,7 @@ def addYScrollToFrame(parentFrame, width, height):
     
     targetFrame = ttk.Frame(canvas, width = width, height = height)
     canvas.create_window((0,0), window = targetFrame, anchor = 'nw')
-    canvas.bind_all("<MouseWheel>", lambda event, canvasCmp = canvas: onMW(event, canvasCmp))        
+    #canvas.bind_all("<MouseWheel>", lambda event, canvasCmp = canvas: onMW(event, canvasCmp)) #commented for now as incomplete feature        
     targetFrame.bind('<Configure>', lambda event, canvasCmp = canvas: canvasCmp.configure(scrollregion = canvasCmp.bbox('all'), width = width, height = height))
     
     return targetFrame
