@@ -4,6 +4,10 @@ Created on Nov 19, 2014
 @author: Malk
 '''
 import os
+
+import PIL.ImageTk
+import PIL.Image
+
 from shutil import copy
 
 from tkinter import ttk, messagebox
@@ -11,8 +15,10 @@ from tkinter.filedialog import askopenfilename
 
 from tkinter import *
 from tkinter.ttk import *
+from tkinter.scrolledtext import ScrolledText
 
 from casper.generator import config
+from casper.generator.ui import uiUtil
 
 class EditGeneratorFrame():
     
@@ -27,8 +33,6 @@ class EditGeneratorFrame():
     # expandedFrame - frame that is currently expanded and can be accessed to collapse it in case other one need to be expanded
     
     def __init__(self, parent):
-        self.createStyles()
-        
         self.parent = parent
         self.frame = ttk.Frame(parent.frame, style = 'EditGenFrame.TFrame')
         self.frame.pack(fill = BOTH, expand = 1)
@@ -45,50 +49,7 @@ class EditGeneratorFrame():
         self.createFooter()        
     
     def clearContent(self):
-        self.clearWidgetContent(self.frame)
-            
-    def clearWidgetContent(self, widget):
-        for child in widget.winfo_children(): 
-            child.destroy()    
-    
-    def addYScrollToFrame(self, parentFrame, width, height):
-        canvas = Canvas(parentFrame, highlightthickness = 0)
-        scrollbar = Scrollbar(parentFrame, orient = 'vertical', command = canvas.yview)
-        canvas.configure(yscrollcommand = scrollbar.set)
-        
-        scrollbar.pack(side = RIGHT, fill = Y)
-        canvas.pack(side = LEFT, fill = BOTH, expand = 1)
-        
-        targetFrame = ttk.Frame(canvas)
-        canvas.create_window((0,0), window = targetFrame, anchor = 'nw')        
-        targetFrame.bind('<Configure>', lambda event, canvasCmp = canvas: canvasCmp.configure(scrollregion = canvasCmp.bbox('all'), width = width, height = height))
-        
-        return targetFrame
-    
-    def createStyles(self):
-        style = ttk.Style()
-        style.configure('EditGenFrame.TFrame')
-        
-        style = ttk.Style()
-        style.configure('EditGenHeader.TFrame')
-        
-        style = ttk.Style()
-        style.configure('EditGenCenter.TFrame', padding = '0 0 0 3' , background = 'gray')
-        
-        style = ttk.Style()
-        style.configure('EditGenFooter.TFrame')
-        
-        style = ttk.Style()
-        style.configure('AddRemoveBlock.TButton', width = 3)
-        
-        style = ttk.Style()
-        style.configure('Block.TButton', width = 20, anchor = W)
-        
-        style = ttk.Style()
-        style.configure('Para.TButton', width = 126, anchor = W)
-        
-        style = ttk.Style()
-        style.configure('GlitchLabel.TLabel', width = 131, anchor = W)
+        uiUtil.clearWidgetContent(self.frame)
     
     def createHeader(self):
         self.header = ttk.Frame(self.frame, padding = '0 5 0 5', style = 'EditGenHeader.TFrame')
@@ -127,7 +88,7 @@ class EditGeneratorFrame():
         blocksScrollingFrame = ttk.Frame(sidePanel, padding = '0 3 0 0')
         blocksScrollingFrame.pack()
         
-        blocksFrame = self.addYScrollToFrame(blocksScrollingFrame, frameWidth, frameHeight)
+        blocksFrame = uiUtil.addYScrollToFrame(blocksScrollingFrame, frameWidth, frameHeight)
         self.createBlocksPanel(blocksFrame)
         
     def createAddBlockPanel(self, sidePanel, width):
@@ -168,7 +129,7 @@ class EditGeneratorFrame():
         paraScrollingFrame = ttk.Frame(paragraphsPanel, padding = '0 3 0 0')
         paraScrollingFrame.pack(fill = BOTH, expand = 1)
         
-        paraListFrame = self.addYScrollToFrame(paraScrollingFrame, int(config.GUI['PARA']['WIDTH']), int(config.GUI['PARA']['HEIGHT']))
+        paraListFrame = uiUtil.addYScrollToFrame(paraScrollingFrame, int(config.GUI['PARA']['WIDTH']), int(config.GUI['PARA']['HEIGHT']))
         self.createParaListPanel(paraListFrame)
     
     def createAddParaPanel(self, parent):
@@ -188,7 +149,7 @@ class EditGeneratorFrame():
         ttk.Button(newLabelFrame, text = config.GUI['MAIN']['REMOVE'], style = 'AddRemoveBlock.TButton', command = lambda frame = parent: self.onAddParaPanelCollapse(frame)).pack(side = RIGHT)
         
         imageFilenameEntry = self.createBrowseImagePanel(parent)
-        addParaWidget = Text(parent, height = int(config.GUI['PARA']['AREA_HEIGHT']))
+        addParaWidget = ScrolledText(parent, height = int(config.GUI['PARA']['AREA_HEIGHT']))
         addParaWidget.pack(fill = X)
         ttk.Button(parent, text = config.GUI['MAIN']['ADD'], command = lambda textWidget = addParaWidget, imageWidget = imageFilenameEntry: self.onAddParagraph(textWidget, imageWidget)).pack(fill = X)
         
@@ -197,13 +158,13 @@ class EditGeneratorFrame():
             self.collapser()
         self.collapser = lambda frame = parent: self.onAddParaPanelCollapse(frame)
         
-        self.clearWidgetContent(parent)
+        uiUtil.clearWidgetContent(parent)
         self.createAddParaExpandedPanel(parent)
         
     def onAddParaPanelCollapse(self, parent):
         self.collapser = None
         
-        self.clearWidgetContent(parent)
+        uiUtil.clearWidgetContent(parent)
         self.createAddParaCollapsedPanel(parent)
     
     def createParaListPanel(self, parent):
@@ -235,7 +196,7 @@ class EditGeneratorFrame():
         ttk.Button(parent, text = config.GUI['MAIN']['REMOVE'], style = 'AddRemoveBlock.TButton', command = lambda rowId = row[0]: self.onDeleteParagraph(rowId)).pack(side = LEFT)
         
     def createEditParaExpandedPanel(self, parent, row):
-        editLabelFrame = ttk.Frame(parent)
+        editLabelFrame = ttk.Frame(parent, padding = '0 5 0 0')
         editLabelFrame.pack(fill = X)
         ttk.Label(editLabelFrame, text = config.GUI['PARA']['EDIT'], anchor = W).pack(side = LEFT, fill = X)
         ttk.Button(editLabelFrame, text = config.GUI['MAIN']['REMOVE'], style = 'AddRemoveBlock.TButton', command = lambda frame = parent, rowObj = row: self.onEditParaPanelCollapse(frame, rowObj)).pack(side = RIGHT)
@@ -246,23 +207,22 @@ class EditGeneratorFrame():
             imageFilename = ''
         imageFilenameEntry.set(imageFilename)
         
-        addParaWidget = Text(parent, height = int(config.GUI['PARA']['AREA_HEIGHT']))
-        addParaWidget.insert('1.0', row[1])
-        addParaWidget.pack(fill = X)
+        addParaWidget = self.createDescriptionPanel(parent, row)
         ttk.Button(parent, text = config.GUI['MAIN']['EDIT'], command = lambda textWidget = addParaWidget, imageWidget = imageFilenameEntry, rowId = row[0]: self.onEditParagraph(textWidget, imageWidget, rowId)).pack(fill = X)
+        ttk.Frame(parent, height = 10).pack() #as for now content is rendered in a frame that is shared with collapsed state - those margin added for visual dictinction 
 
     def onEditParaPanelExpand(self, parent, row):
         if self.collapser is not None:
             self.collapser()
         self.collapser = lambda frame = parent: self.onEditParaPanelCollapse(frame, row)
         
-        self.clearWidgetContent(parent)
+        uiUtil.clearWidgetContent(parent)
         self.createEditParaExpandedPanel(parent, row)
         
     def onEditParaPanelCollapse(self, parent, row):
         self.collapser = None
         
-        self.clearWidgetContent(parent)
+        uiUtil.clearWidgetContent(parent)
         self.createEditParaCollapsedPanel(parent, row)
     
     def createBrowseImagePanel(self, parent):
@@ -270,29 +230,27 @@ class EditGeneratorFrame():
         imageFrame.pack(fill = X)
         
         imageFilenameEntry = StringVar()
-        ttk.Button(imageFrame, text = config.GUI['PARA']['IMAGE'], command = lambda imageWidget = imageFilenameEntry: self.browseImageFilename(imageWidget)).pack(side = LEFT)
+        ttk.Button(imageFrame, text = config.GUI['PARA']['IMAGE'], command = lambda imageWidget = imageFilenameEntry: uiUtil.browseImageFilename(imageWidget)).pack(side = LEFT)
         ttk.Entry(imageFrame, textvariable = imageFilenameEntry).pack(side = LEFT, fill = X, expand = 1)
         
         return imageFilenameEntry
     
-    def browseImageFilename(self, imageFilenameWidget):
-        fname = askopenfilename(filetypes=(("Image files", "*.jpg;*.jpeg;*.png;*.gif"), ("All files", "*.*")))
-        if fname is not None:
-            imageFilenameWidget.set(fname)
+    def createDescriptionPanel(self, parent, paragraph):
+        descriptionFrame = ttk.Frame(parent, padding = '0 5 0 5')
+        descriptionFrame.pack(fill = BOTH)
+            
+        imageFilename = paragraph[3]
+        if imageFilename is not '':
+            uiUtil.renderImage(self.currentGenerator.getImagesPath(), descriptionFrame, imageFilename)
         else:
-            imageFilenameWidget.set('')
-
-    def prepareImage(self, image):
-        # image exists in current generator images folder
-        if os.path.isfile(self.currentGenerator.getImagesPath() + image):
-            return image
+            ttk.Label(descriptionFrame, text = config.GUI['GENERATORS']['NO_IMAGE'], width = int(config.GUI['PARA']['NO_IMAGE_WIDTH'])).pack(side = LEFT)
+            
+        ttk.Separator(descriptionFrame, orient = VERTICAL).pack(side = LEFT, fill = Y)
+        addParaWidget = ScrolledText(descriptionFrame, height = int(config.GUI['PARA']['AREA_HEIGHT']), width = int(config.GUI['PARA']['AREA_WIDTH']))
+        addParaWidget.insert('1.0', paragraph[1])
+        addParaWidget.pack(side = LEFT)
         
-        # path is somehow broken, store empty path
-        if not os.path.isfile(image):
-            return ''
-        
-        newFilename = copy(image, self.currentGenerator.getImagesPath())
-        return newFilename[newFilename.rfind('/') + 1:]
+        return addParaWidget
         
     def onAddBlock(self, blockNameValue):
         try:
@@ -322,7 +280,7 @@ class EditGeneratorFrame():
             image = imageWidget.get()
         except ValueError:
             pass
-        image = self.prepareImage(image)
+        image = uiUtil.prepareImage(self.currentGenerator.getImagesPath(), image)
         
         self.activeBlock.addParagraph(name, image)
         self.loadBlock(self.activeBlock)
@@ -339,7 +297,7 @@ class EditGeneratorFrame():
             image = imageWidget.get()
         except ValueError:
             pass
-        image = self.prepareImage(image)
+        image = uiUtil.prepareImage(self.currentGenerator.getImagesPath(), image)
         
         self.activeBlock.editParagraph(rowId, name, image)
         self.loadBlock(self.activeBlock)

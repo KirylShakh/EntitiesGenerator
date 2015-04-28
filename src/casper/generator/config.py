@@ -40,7 +40,6 @@ def init(path = None):
     if not path:
         #path = os.getcwd() + '\\..\\..\\..\\res\\'
         path = os.getcwd() + '\\..\\res\\'
-    print(path)
     
     config = Config(path)
     GUI = config.gui

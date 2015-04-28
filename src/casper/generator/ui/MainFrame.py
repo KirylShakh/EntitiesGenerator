@@ -11,6 +11,7 @@ from tkinter.ttk import *
 from casper.generator import config
 from casper.generator.data.Generator import Generator
 
+from casper.generator.ui import uiUtil
 from casper.generator.ui.ChooseGeneratorFrame import ChooseGeneratorFrame
 from casper.generator.ui.EditGeneratorFrame import EditGeneratorFrame 
 from casper.generator.ui.GenerateFrame import GenerateFrame
@@ -21,8 +22,7 @@ class MainFrame():
     '''
 
     def __init__(self, parent):
-        style = ttk.Style()
-        style.configure('MainFrame.TFrame')
+        uiUtil.createStyles()
         
         self.parent = parent
         self.frame = ttk.Frame(parent, padding = "3 3 12 12", style = 'MainFrame.TFrame')
@@ -46,8 +46,7 @@ class MainFrame():
         self.activeFrame.render(generator)
 
     def clearContent(self):
-        for child in self.frame.winfo_children():
-            child.destroy()
+        uiUtil.clearWidgetContent(self.frame)
 
     def createGenerator(self, name):
         generator = Generator(name)

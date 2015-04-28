@@ -11,13 +11,11 @@ from tkinter import *
 from tkinter.ttk import *
 
 from casper.generator import config
-from casper.generator.data.Generator import Generator
+from casper.generator.ui import uiUtil
 
 class ChooseGeneratorFrame():
 
     def __init__(self, parent):
-        self.createStyles()
-        
         self.parent = parent
         self.frame = ttk.Frame(parent.frame, padding = "3 3 12 12")
         self.frame.pack(fill = BOTH, expand = 1)
@@ -29,15 +27,10 @@ class ChooseGeneratorFrame():
         self.createFooter()
     
     def clearContent(self):
-        for child in self.frame.winfo_children():
-            child.destroy()
-            
-    def createStyles(self):
-        style = ttk.Style()
-        style.configure('AddRemoveGenerator.TButton', width = 3)
-    
+        uiUtil.clearWidgetContent(self.frame)
+
     def createHeader(self):
-        self.header = ttk.Frame(self.frame);
+        self.header = ttk.Frame(self.frame, padding = '0 0 0 5');
         self.header.pack(fill = X)
         
         ttk.Label(self.header, text = config.GUI['MAIN']['HOME']).grid(column = 0, row = 0)
@@ -49,7 +42,11 @@ class ChooseGeneratorFrame():
         ttk.Separator(self.center, orient = HORIZONTAL).pack(fill = X)
         ttk.Label(self.center, text = config.GUI['GENERATORS']['TITLE'], font = "Helvetica 14", anchor = W).pack(fill = X)
         self.createNewGeneratorPanel(self.center)
-        self.createGeneratorListPanel(self.center)  
+        
+        width = int(config.GUI['GENERATORS']['WIDTH'])
+        height = int(config.GUI['GENERATORS']['HEIGHT'])
+        genListFrame = uiUtil.addYScrollToFrame(self.center, width, height)
+        self.createGeneratorListPanel(genListFrame)  
         
     def createFooter(self):
         self.footer = ttk.Frame(self.frame)
@@ -86,7 +83,7 @@ class ChooseGeneratorFrame():
         for name in names:
             frame = ttk.Frame(listFrame)
             frame.pack(fill = X)
-            ttk.Button(frame, text = name, command = lambda generator = name : self.loadGenerator(generator)).pack(fill = X, side = LEFT, expand = 1)
+            ttk.Button(frame, text = name, width = int(config.GUI['GENERATORS']['NAME_WIDTH']), command = lambda generator = name : self.loadGenerator(generator)).pack(fill = X, side = LEFT, expand = 1)
             ttk.Button(frame, text = config.GUI['MAIN']['REMOVE'], style = 'AddRemoveGenerator.TButton', command = lambda generator = name : self.onDeleteGenerator(generator)).pack(side = LEFT)
             ttk.Button(frame, text = config.GUI['GENERATORS']['GENERATE'], command = lambda generator = name : self.onGenerate(generator)).pack(side = LEFT)
             
