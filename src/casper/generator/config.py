@@ -38,8 +38,7 @@ def init(path = None):
     global DATA_PATH
     
     if not path:
-        #path = os.getcwd() + '\\..\\..\\..\\res\\'
-        path = os.getcwd() + '\\..\\res\\'
+        path = os.getcwd() + '\\..\\..\\..\\res\\'
     
     config = Config(path)
     GUI = config.gui
