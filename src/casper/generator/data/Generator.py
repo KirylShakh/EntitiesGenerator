@@ -40,6 +40,7 @@ class Generator():
         addedBlock = Block(self.instance, addedBlockRecord.read())
         addedBlock.create()
         self.blocks.append(addedBlock)
+        return addedBlock
         
     def deleteBlock(self, blockId):
         block = self.getBlock(blockId)

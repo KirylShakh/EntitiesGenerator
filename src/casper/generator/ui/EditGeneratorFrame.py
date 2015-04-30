@@ -100,16 +100,20 @@ class EditGeneratorFrame():
         ttk.Button(addBlockFrame, text = config.GUI['MAIN']['ADD'], style = 'AddRemoveBlock.TButton', command = lambda addBlockNameEntry = addBlockNameEntry: self.onAddBlock(addBlockNameEntry)).pack(side = LEFT)
 
     def createBlocksPanel(self, parent):
+        menu = self.createBlockContextMenu(parent)
         row = 0
         index = row
         for block in self.currentGenerator.blocks:
-            ttk.Button(parent, text = block.blockName, style = 'Block.TButton', command = lambda block = block : self.loadBlock(block)).grid(column = 0, row = index)
+            blockButton = ttk.Button(parent, text = block.blockName, style = 'Block.TButton', command = lambda block = block : self.loadBlock(block))
+            blockButton.grid(column = 0, row = index)
+            blockButton.bind('<Button-3>', lambda event, contextMenu = menu, activeBlock = block: self.onBlockContextMenu(event, contextMenu, activeBlock))
+            
             ttk.Button(parent, text = config.GUI['MAIN']['REMOVE'], style = 'AddRemoveBlock.TButton', command = lambda blockId = block.blockId : self.onDeleteBlock(blockId)).grid(column = 1, row = index)
             index = index + 1
         
         if index == 0:
             ttk.Label(parent, text = config.GUI['BLOCKS']['EMPTY']).pack(fill = X)
-        
+    
     def createParagraphsPanel(self, parent):
         self.paragraphsPanel = ttk.Frame(parent, padding = '3 0 5 0')   
         self.paragraphsPanel.pack(side = LEFT, fill = BOTH, expand = 1)
@@ -168,6 +172,8 @@ class EditGeneratorFrame():
         self.createAddParaCollapsedPanel(parent)
     
     def createParaListPanel(self, parent):
+        menu = self.createParaContextMenu(parent)
+        
         exist = FALSE
         # some layout bug or my bad skills in this tkinter with canvases - when only 1 frame is rendered, its size is by whatever reason is reduced, 
         # so I render another widget in that case, and rendered frame becomes somehow dependant on that last widget size
@@ -181,25 +187,27 @@ class EditGeneratorFrame():
             
             paraFrame = ttk.Frame(parent, style = 'EditGenFooter.TFrame')
             paraFrame.pack(fill = X)
-            self.createEditParaCollapsedPanel(paraFrame, row)
-            
+            self.createEditParaCollapsedPanel(paraFrame, row, menu)
+        
         if not exist:
             ttk.Label(parent, text = config.GUI['PARA']['EMPTY']).pack(fill = X)
         elif isOnePara:
             ttk.Label(parent, text = ' ', style = 'GlitchLabel.TLabel').pack(side = LEFT, fill = X)
     
-    def createEditParaCollapsedPanel(self, parent, row):
+    def createEditParaCollapsedPanel(self, parent, row, menu):
         text = row[1]
         text = text.replace('\n', ' ')
             
-        ttk.Button(parent, text = text, style = 'Para.TButton', command = lambda frame = parent, rowObj = row: self.onEditParaPanelExpand(frame, rowObj)).pack(side = LEFT, fill = X)
+        paraButton = ttk.Button(parent, text = text, style = 'Para.TButton', command = lambda frame = parent, rowObj = row, contextMenu = menu: self.onEditParaPanelExpand(frame, rowObj, contextMenu))
+        paraButton.pack(side = LEFT, fill = X)
         ttk.Button(parent, text = config.GUI['MAIN']['REMOVE'], style = 'AddRemoveBlock.TButton', command = lambda rowId = row[0]: self.onDeleteParagraph(rowId)).pack(side = LEFT)
+        paraButton.bind('<Button-3>', lambda event, contextMenu = menu, activeParagraph = row: self.onParaContextMenu(event, contextMenu, activeParagraph))
         
-    def createEditParaExpandedPanel(self, parent, row):
+    def createEditParaExpandedPanel(self, parent, row, menu):
         editLabelFrame = ttk.Frame(parent, padding = '0 5 0 0')
         editLabelFrame.pack(fill = X)
         ttk.Label(editLabelFrame, text = config.GUI['PARA']['EDIT'], anchor = W).pack(side = LEFT, fill = X)
-        ttk.Button(editLabelFrame, text = config.GUI['MAIN']['REMOVE'], style = 'AddRemoveBlock.TButton', command = lambda frame = parent, rowObj = row: self.onEditParaPanelCollapse(frame, rowObj)).pack(side = RIGHT)
+        ttk.Button(editLabelFrame, text = config.GUI['MAIN']['REMOVE'], style = 'AddRemoveBlock.TButton', command = lambda frame = parent, rowObj = row, contextMenu = menu: self.onEditParaPanelCollapse(frame, rowObj, contextMenu)).pack(side = RIGHT)
         
         imageFilenameEntry = self.createBrowseImagePanel(parent)
         imageFilename = row[3]
@@ -211,19 +219,19 @@ class EditGeneratorFrame():
         ttk.Button(parent, text = config.GUI['MAIN']['EDIT'], command = lambda textWidget = addParaWidget, imageWidget = imageFilenameEntry, rowId = row[0]: self.onEditParagraph(textWidget, imageWidget, rowId)).pack(fill = X)
         ttk.Frame(parent, height = 10).pack() #as for now content is rendered in a frame that is shared with collapsed state - those margin added for visual dictinction 
 
-    def onEditParaPanelExpand(self, parent, row):
+    def onEditParaPanelExpand(self, parent, row, menu):
         if self.collapser is not None:
             self.collapser()
-        self.collapser = lambda frame = parent: self.onEditParaPanelCollapse(frame, row)
+        self.collapser = lambda frame = parent: self.onEditParaPanelCollapse(frame, row, menu)
         
         uiUtil.clearWidgetContent(parent)
-        self.createEditParaExpandedPanel(parent, row)
+        self.createEditParaExpandedPanel(parent, row, menu)
         
-    def onEditParaPanelCollapse(self, parent, row):
+    def onEditParaPanelCollapse(self, parent, row, menu):
         self.collapser = None
         
         uiUtil.clearWidgetContent(parent)
-        self.createEditParaCollapsedPanel(parent, row)
+        self.createEditParaCollapsedPanel(parent, row, menu)
     
     def createBrowseImagePanel(self, parent):
         imageFrame = ttk.Frame(parent)
@@ -251,7 +259,56 @@ class EditGeneratorFrame():
         addParaWidget.pack(side = LEFT)
         
         return addParaWidget
+    
+    def createBlockContextMenu(self, parent):
+        menu = Menu(parent, tearoff = 0)
+        menu.add_command(label = config.GUI['MAIN']['MAKE_COPY'], command = lambda menuCmp = menu: self.onCopyBlock(menuCmp))
+        menu.add_separator()
+        menu.add_command(label = config.GUI['MAIN']['MOVE_UP'], command = lambda menuCmp = menu: self.onMoveBlockUp(menuCmp))
+        menu.add_command(label = config.GUI['MAIN']['MOVE_DOWN'], command = lambda menuCmp = menu: self.onMoveBlockDown(menuCmp))
+        return menu
+    
+    def onBlockContextMenu(self, event, menu, block):
+        menu.currentBlock = block
+        menu.post(event.x_root, event.y_root)
+    
+    def onCopyBlock(self, menu):
+        addedBlock = self.currentGenerator.addBlock(self.getCopiedBlockName(menu.currentBlock.blockName))
+        self.center.destroy()
+        self.createCenter()
+        self.loadBlock(addedBlock)
+    
+    def getCopiedBlockName(self, originalName):
+        return 'Copy of ' + originalName
+    
+    def onMoveBlockUp(self, menu):
+        pass
+    
+    def onMoveBlockDown(self, menu):
+        pass
+    
+    def createParaContextMenu(self, parent):
+        menu = Menu(parent, tearoff = 0)
+        menu.add_command(label = config.GUI['MAIN']['MAKE_COPY'], command = lambda menuCmp = menu: self.onCopyPara(menuCmp))
+        menu.add_separator()
+        menu.add_command(label = config.GUI['MAIN']['MOVE_UP'], command = lambda menuCmp = menu: self.onMoveParaUp(menuCmp))
+        menu.add_command(label = config.GUI['MAIN']['MOVE_DOWN'], command = lambda menuCmp = menu: self.onMoveParaDown(menuCmp))
+        return menu
+    
+    def onParaContextMenu(self, event, menu, paragraph):
+        menu.currentParagraph = paragraph
+        menu.post(event.x_root, event.y_root)
+    
+    def onCopyPara(self, menu):
+        self.activeBlock.addParagraph(menu.currentParagraph[1], menu.currentParagraph[3], menu.currentParagraph[2])
+        self.loadBlock(self.activeBlock)
         
+    def onMoveParaUp(self, menu):
+        pass
+    
+    def onMoveParaDown(self, menu):
+        pass
+    
     def onAddBlock(self, blockNameValue):
         try:
             name = blockNameValue.get()

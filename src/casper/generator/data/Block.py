@@ -17,7 +17,7 @@ class Block(Table):
         super().__init__(instance, self.blockName + str(self.blockId), [self.blockL['DESCRIPTION'] + ' text', self.blockL['HTML'] + ' text', self.blockL['IMAGE'] + ' text'])
         
     def addParagraph(self, description, image = '', html = ''):
-        self.insert([description, html, image])
+        return self.insert([description, html, image])
         
     def editParagraph(self, rowId, description, image = None, html = None):
         fields = [(self.blockL['DESCRIPTION'], description)]
