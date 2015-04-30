@@ -1,1 +1,0 @@
-res/pythonpath.bat %CD% casper/generator/main.py

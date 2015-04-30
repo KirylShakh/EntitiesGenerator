@@ -1,6 +1,6 @@
 .project
 .pydevproject
 res/data/
-res/images
 install
-run
+dist
+src/*/__pycache__

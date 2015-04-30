@@ -311,6 +311,7 @@ class EditGeneratorFrame():
         self.loadBlock(self.activeBlock)
     
     def onHome(self):
+        self.currentGenerator.close()
         self.parent.renderChooseGeneratorsFrame()
         
     def onGenerate(self):

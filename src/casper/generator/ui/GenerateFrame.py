@@ -55,32 +55,43 @@ class GenerateFrame():
         for block in self.currentGenerator.blocks:
             frame = ttk.Frame(parent, padding = '0 0 0 5')
             frame.pack(fill = X)
-            ttk.Label(frame, text = block.blockName, font = "Helvetica 13", anchor = W).pack(fill = X)
-            
-            randomParagraph = block.readRandom()
-            if randomParagraph is None:
-                ttk.Label(frame, text = config.GUI['GENERATORS']['NO_DATA'], anchor = W).pack(fill = X)
-                ttk.Separator(frame, orient = HORIZONTAL).pack(fill = X)
-                continue
-            
-            descriptionFrame = ttk.Frame(frame)
-            descriptionFrame.pack(fill = BOTH, expand = 1)
-            
-            imageFilename = randomParagraph[3]
-            if imageFilename is not '':
-                uiUtil.renderImage(self.currentGenerator.getImagesPath(), descriptionFrame, imageFilename)
-            else:
-                Label(descriptionFrame, text = config.GUI['GENERATORS']['NO_IMAGE'], width = int(config.GUI['GENERATORS']['PREVIEW_LABEL_WIDTH']), height = int(config.GUI['GENERATORS']['PREVIEW_LABEL_HEIGHT'])).pack(side = LEFT)
-            
-            ttk.Separator(descriptionFrame, orient = VERTICAL).pack(side = LEFT, fill = Y)
-            
-            descriptionLabel = ScrolledText(descriptionFrame, wrap='word', width = int(config.GUI['GENERATORS']['DESCRIPTION_WIDTH']), height = int(config.GUI['GENERATORS']['PREVIEW_LABEL_HEIGHT']))
-            descriptionLabel.insert(1.0, randomParagraph[1])
-            descriptionLabel.pack(side = LEFT)
-            descriptionLabel.configure(bg = self.parent.parent.cget('bg'), relief = 'flat', state = 'disabled')
-            ttk.Separator(frame, orient = HORIZONTAL).pack(fill = X)
+            self.createRandomParaPanel(frame, block)
+    
+    def createRandomParaPanel(self, parent, block):
+        headerFrame = ttk.Frame(parent, padding = '0 0 0 3')
+        headerFrame.pack(fill = X)
+        ttk.Label(headerFrame, text = block.blockName, font = "Helvetica 13", anchor = W).pack(fill = X, side = LEFT)
+        ttk.Button(headerFrame, text = config.GUI['GENERATORS']['GENERATE'], command = lambda frame = parent, blockObj = block: self.onGerenateBlock(frame, blockObj)).pack(side = RIGHT)
+        
+        randomParagraph = block.readRandom()
+        if randomParagraph is None:
+            ttk.Label(parent, text = config.GUI['GENERATORS']['NO_DATA'], anchor = W).pack(fill = X)
+            ttk.Separator(parent, orient = HORIZONTAL).pack(fill = X)
+            return
+        
+        descriptionFrame = ttk.Frame(parent)
+        descriptionFrame.pack(fill = BOTH, expand = 1)
+        
+        imageFilename = randomParagraph[3]
+        if imageFilename is not '':
+            uiUtil.renderImage(self.currentGenerator.getImagesPath(), descriptionFrame, imageFilename)
+        else:
+            Label(descriptionFrame, text = config.GUI['GENERATORS']['NO_IMAGE'], width = int(config.GUI['GENERATORS']['PREVIEW_LABEL_WIDTH']), height = int(config.GUI['GENERATORS']['PREVIEW_LABEL_HEIGHT'])).pack(side = LEFT)
+        
+        ttk.Separator(descriptionFrame, orient = VERTICAL).pack(side = LEFT, fill = Y)
+        
+        descriptionLabel = ScrolledText(descriptionFrame, wrap='word', width = int(config.GUI['GENERATORS']['DESCRIPTION_WIDTH']), height = int(config.GUI['GENERATORS']['PREVIEW_LABEL_HEIGHT']))
+        descriptionLabel.insert(1.0, randomParagraph[1])
+        descriptionLabel.pack(side = LEFT)
+        descriptionLabel.configure(bg = self.parent.parent.cget('bg'), relief = 'flat', state = 'disabled')
+        ttk.Separator(parent, orient = HORIZONTAL).pack(fill = X)
+    
+    def onGerenateBlock(self, frame, block):
+        uiUtil.clearWidgetContent(frame)
+        self.createRandomParaPanel(frame, block)
     
     def onHome(self):
+        self.currentGenerator.close()
         self.parent.renderChooseGeneratorsFrame()
         
     def onEdit(self):
