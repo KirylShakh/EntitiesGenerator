@@ -3,22 +3,14 @@ Created on Nov 19, 2014
 
 @author: Malk
 '''
-import os
-
-import PIL.ImageTk
-import PIL.Image
-
-from shutil import copy
-
 from tkinter import ttk, messagebox
-from tkinter.filedialog import askopenfilename
 
 from tkinter import *
-from tkinter.ttk import *
 from tkinter.scrolledtext import ScrolledText
 
 from casper.generator import config
 from casper.generator.ui import uiUtil
+from casper.generator.error import Error
 
 class EditGeneratorFrame():
     
@@ -273,7 +265,12 @@ class EditGeneratorFrame():
         menu.post(event.x_root, event.y_root)
     
     def onCopyBlock(self, menu):
-        addedBlock = self.currentGenerator.addBlock(self.getCopiedBlockName(menu.currentBlock.blockName))
+        copyName = self.getCopiedBlockName(menu.currentBlock.blockName)
+        addedBlock = self.currentGenerator.addBlock(copyName)
+        while isinstance(addedBlock, Error):
+            copyName = self.getCopiedBlockName(copyName)
+            addedBlock = self.currentGenerator.addBlock(copyName)
+         
         self.center.destroy()
         self.createCenter()
         self.loadBlock(addedBlock)
@@ -315,11 +312,15 @@ class EditGeneratorFrame():
         except ValueError:
             pass
         
-        self.currentGenerator.addBlock(name)
+        addedBlock = self.currentGenerator.addBlock(name)
+        if isinstance(addedBlock, Error):
+            messagebox.showerror(addedBlock.title, addedBlock.message)
+            return
         
         self.center.destroy()
-        self.createCenter()    
-    
+        self.createCenter()
+        self.loadBlock(addedBlock)
+        
     def onDeleteBlock(self, blockId):
         result = messagebox.askquestion(config.GUI['MAIN']['DELETE'], config.GUI['MAIN']['SURE'])
         if result == 'no':

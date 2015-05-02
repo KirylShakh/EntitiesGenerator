@@ -72,6 +72,9 @@ class Table():
     def read(self):
         return self.instance.execute('select * from {0}'.format(quote(self.name)))
     
+    def readBy(self, fieldName, fieldValue):
+        return self.instance.execute('select * from {0} where {1}={2}'.format(quote(self.name), quote(fieldName), quote(fieldValue)))
+    
     """
     fieldValues - array of values for new record in the order as fields were passed to table constructor
     """    

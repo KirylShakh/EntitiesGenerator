@@ -7,6 +7,7 @@ Created on 25.11.2014
 from casper.generator import config
 from casper.generator.data.dbUtil import createDB, openDB, Record, Table
 from casper.generator.data.Block import Block
+from casper.generator.error import Error
 
 class Generator():
     
@@ -36,6 +37,13 @@ class Generator():
         self.blocks = []
     
     def addBlock(self, name, description = ''):
+        exist = False
+        for row in self.blocksT.readBy(self.blocksL['BLOCK'], name):
+            exist = True
+            break
+        if exist:
+            return Error(config.DB['BLOCKS_ERROR']['UNIQUE_TITLE'], config.DB['BLOCKS_ERROR']['UNIQUE_MESSAGE'])
+        
         addedBlockRecord = self.blocksT.insert([name, description])
         addedBlock = Block(self.instance, addedBlockRecord.read())
         addedBlock.create()
