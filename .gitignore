@@ -3,4 +3,4 @@
 res/data/
 install
 dist
-src/*/__pycache__
+__pycache__
